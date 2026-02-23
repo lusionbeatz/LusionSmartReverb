@@ -3,7 +3,7 @@ project(LUSIONBEATZSMARTREVERB VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# ── Download JUCE 8.0.10 (exact version you used on Windows) ──
+# ── Download JUCE 8.0.10 ──
 include(FetchContent)
 FetchContent_Declare(
     JUCE
@@ -30,16 +30,19 @@ juce_add_plugin(LUSIONBEATZSMARTREVERB
     AU_MAIN_TYPE                kAudioUnitType_Effect
 )
 
+# ── Binary Resources ──
+juce_add_binary_data(BinaryData SOURCES
+    Source/lusionbeatz.png
+)
+
+# ── Generate JuceHeader.h (needed because source files use #include <JuceHeader.h>) ──
+juce_generate_juce_header(LUSIONBEATZSMARTREVERB)
+
 # ── Source Files ──
 target_sources(LUSIONBEATZSMARTREVERB PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/ReverbEngine.cpp
-)
-
-# ── Binary Resources (your logo image) ──
-juce_add_binary_data(BinaryData SOURCES
-    Source/lusionbeatz.png
 )
 
 # ── JUCE Modules ──
@@ -63,7 +66,7 @@ target_link_libraries(LUSIONBEATZSMARTREVERB PRIVATE
     juce::juce_recommended_warning_flags
 )
 
-# ── JUCE Compile Definitions ──
+# ── Compile Definitions ──
 target_compile_definitions(LUSIONBEATZSMARTREVERB PUBLIC
     JUCE_STRICT_REFCOUNTEDPOINTER=1
     JUCE_VST3_CAN_REPLACE_VST2=0
