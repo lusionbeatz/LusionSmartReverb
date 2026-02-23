@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="FvDDaq" name="LUSIONBEATZSMARTREVERB" projectType="audioplug"
+              useAppConfig="0" addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
+  <MAINGROUP id="c2QnRN" name="LUSIONBEATZSMARTREVERB">
+    <GROUP id="{31FE5B2F-35A4-5D42-88CC-9F162E67FB5A}" name="Resources ">
+      <FILE id="Uljn4I" name="lusionbeatz.png" compile="0" resource="1" file="Source/lusionbeatz.png"/>
+    </GROUP>
+    <GROUP id="{AC502694-3B8C-6BF7-FF43-B380F755599A}" name="Source">
+      <FILE id="qONGoX" name="ReverbEngine.cpp" compile="1" resource="0"
+            file="Source/ReverbEngine.cpp"/>
+      <FILE id="CghLPG" name="ReverbEngine.h" compile="0" resource="0" file="Source/ReverbEngine.h"/>
+      <FILE id="VKN3Le" name="PluginProcessor.cpp" compile="1" resource="0"
+            file="Source/PluginProcessor.cpp"/>
+      <FILE id="nZPn6r" name="PluginProcessor.h" compile="0" resource="0"
+            file="Source/PluginProcessor.h"/>
+      <FILE id="vW09dp" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="UiPcjJ" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors_headless" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
+  <EXPORTFORMATS>
+    <VS2026 targetFolder="Builds/VisualStudio2026">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="LUSIONBEATZSMARTREVERB"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="LUSIONBEATZSMARTREVERB"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../juce/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../juce/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../juce/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../juce/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../juce/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors_headless" path="../../juce/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../juce/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../juce/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../juce/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../juce/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../juce/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../juce/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../juce/juce-8.0.10-windows/JUCE/modules"/>
+      </MODULEPATHS>
+    </VS2026>
+  </EXPORTFORMATS>
+</JUCERPROJECT>
