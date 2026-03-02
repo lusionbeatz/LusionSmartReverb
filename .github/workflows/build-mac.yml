@@ -1,36 +1,158 @@
-name: Build Mac VST3 + AU
+# ─────────────────────────────────────────────────────────────────────────────
+# LusionTuner – macOS CI  (VST3 + AU)
+# ─────────────────────────────────────────────────────────────────────────────
+name: Build macOS (VST3 + AU)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main", "master", "dev" ]
+    paths:
+      - 'Source/**'
+      - 'CMakeLists.txt'
+      - 'LusionTuner.jucer'
+      - 'JuceLibraryCode/**'
+      - '.github/workflows/build-macos.yml'
+  pull_request:
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
+concurrency:
+  group: macos-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-mac:
-    runs-on: macos-latest
+  build-macos:
+    name: macOS – Release (VST3 + AU)
+    runs-on: macos-14
+
+    env:
+      JUCE_VERSION: "8.0.10"
+      BUILD_DIR:    build_mac
+      PLUGIN_NAME:  LusionTuner
 
     steps:
-      - name: Checkout Code
+      # ── 1. Checkout ─────────────────────────────────────────────────────────
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Install CMake + Ninja
-        run: brew install cmake ninja
+      # ── 2. Cache JUCE ────────────────────────────────────────────────────────
+      - name: Cache JUCE
+        id: cache-juce
+        uses: actions/cache@v4
+        with:
+          path: JUCE
+          key: juce-${{ env.JUCE_VERSION }}-v3
 
+      - name: Download JUCE ${{ env.JUCE_VERSION }}
+        if: steps.cache-juce.outputs.cache-hit != 'true'
+        run: |
+          curl -L \
+            "https://github.com/juce-framework/JUCE/archive/refs/tags/${{ env.JUCE_VERSION }}.zip" \
+            -o juce.zip
+          unzip -q juce.zip
+          mv JUCE-${{ env.JUCE_VERSION }} JUCE
+          echo "✅ JUCE downloaded: $(ls JUCE/CMakeLists.txt)"
+
+      # ── 3. PATCH JuceHeader.h ────────────────────────────────────────────────
+      # The committed JuceLibraryCode/JuceHeader.h includes
+      # juce_audio_processors_headless which is NOT a public header in JUCE 8.
+      # We remove that one line so the macOS build compiles cleanly.
+      # This does NOT touch your Windows files — only the CI runner copy.
+      - name: Patch JuceHeader.h (remove headless include)
+        run: |
+          HEADER="JuceLibraryCode/JuceHeader.h"
+          echo "=== Before patch (headless lines) ==="
+          grep -n "headless" "$HEADER" || echo "(none found)"
+
+          # Remove any line containing juce_audio_processors_headless
+          sed -i '' '/juce_audio_processors_headless/d' "$HEADER"
+
+          echo "=== After patch (headless lines) ==="
+          grep -n "headless" "$HEADER" || echo "✅ All headless includes removed"
+
+      # ── 4. Select Xcode ──────────────────────────────────────────────────────
+      - name: Select Xcode 15.4
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
+      # ── 5. Configure CMake ───────────────────────────────────────────────────
       - name: Configure CMake
         run: |
-          cmake -B build -G Ninja \
+          cmake -B ${{ env.BUILD_DIR }} \
+            -G "Xcode" \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
+            -DJUCE_PATH="${{ github.workspace }}/JUCE" \
+            -DJUCE_BUILD_EXTRAS=OFF \
+            -DJUCE_BUILD_EXAMPLES=OFF \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET="11.0"
 
-      - name: Build Plugin
-        run: cmake --build build --config Release --parallel
+      # ── 6. Build Release ─────────────────────────────────────────────────────
+      - name: Build Release
+        run: |
+          cmake --build ${{ env.BUILD_DIR }} \
+            --config Release \
+            --target "${{ env.PLUGIN_NAME }}_VST3" \
+                     "${{ env.PLUGIN_NAME }}_AU" \
+            --parallel $(sysctl -n hw.logicalcpu)
 
-      - name: Upload Mac Builds
+      # ── 7. Locate artefacts ──────────────────────────────────────────────────
+      - name: Locate build artefacts
+        id: locate
+        run: |
+          echo "=== Searching for VST3 ==="
+          VST3=$(find ${{ env.BUILD_DIR }} -name "${{ env.PLUGIN_NAME }}.vst3" \
+                   -type d 2>/dev/null | head -1)
+          echo "VST3: $VST3"
+
+          echo "=== Searching for AU ==="
+          AU=$(find ${{ env.BUILD_DIR }} -name "${{ env.PLUGIN_NAME }}.component" \
+                 -type d 2>/dev/null | head -1)
+          echo "AU: $AU"
+
+          [ -n "$VST3" ] || { echo "❌ VST3 not found"; exit 1; }
+          [ -n "$AU"   ] || { echo "❌ AU not found";   exit 1; }
+
+          echo "vst3_path=$VST3" >> "$GITHUB_OUTPUT"
+          echo "au_path=$AU"     >> "$GITHUB_OUTPUT"
+
+      # ── 8. Package ───────────────────────────────────────────────────────────
+      - name: Package artefacts
+        run: |
+          mkdir -p artifacts
+
+          cd "${{ steps.locate.outputs.vst3_path }}/.."
+          zip -r "${{ github.workspace }}/artifacts/${{ env.PLUGIN_NAME }}_macOS_VST3.zip" \
+               "${{ env.PLUGIN_NAME }}.vst3"
+
+          cd "${{ steps.locate.outputs.au_path }}/.."
+          zip -r "${{ github.workspace }}/artifacts/${{ env.PLUGIN_NAME }}_macOS_AU.zip" \
+               "${{ env.PLUGIN_NAME }}.component"
+
+          echo "=== Artifacts ==="
+          ls -lh "${{ github.workspace }}/artifacts/"
+
+      # ── 9. Upload artifacts ──────────────────────────────────────────────────
+      - name: Upload VST3
         uses: actions/upload-artifact@v4
         with:
-          name: LusionSmartReverb-Mac
-          path: |
-            build/**/*.vst3
-            build/**/*.component
-          if-no-files-found: warn
+          name: ${{ env.PLUGIN_NAME }}-macOS-VST3
+          path: artifacts/${{ env.PLUGIN_NAME }}_macOS_VST3.zip
+          retention-days: 90
+
+      - name: Upload AU
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PLUGIN_NAME }}-macOS-AU
+          path: artifacts/${{ env.PLUGIN_NAME }}_macOS_AU.zip
+          retention-days: 90
+
+      # ── 10. Attach to GitHub Release (only on version tags) ──────────────────
+      - name: Upload to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/${{ env.PLUGIN_NAME }}_macOS_VST3.zip
+            artifacts/${{ env.PLUGIN_NAME }}_macOS_AU.zip
